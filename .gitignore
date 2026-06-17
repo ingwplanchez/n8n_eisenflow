@@ -8,5 +8,7 @@ _eisenhower_matrix_orchestrator_v2_.json
 # IDE and OS files
 .idea/
 .vscode/
+.gemini/
 Thumbs.db
 .DS_Store
+
