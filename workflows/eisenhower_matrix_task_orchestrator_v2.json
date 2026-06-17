@@ -1,0 +1,834 @@
+{
+  "name": "Eisenhower Matrix Task Orchestrator V2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "eisenhower/tasks",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "37a7c25a-90f8-412b-993d-72fa79578548",
+      "name": "Webhook Ingestion",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -2160,
+        544
+      ],
+      "webhookId": "0b01bef9-a500-4b15-b227-bc0c3f3c5220",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst validatedItems = [];\n\nfor (const item of items) {\n  const body = item.json.body;\n  if (!body) {\n    validatedItems.push({\n      json: {\n        isValid: false,\n        error: \"Missing body in request payload.\"\n      }\n    });\n    continue;\n  }\n  \n  const { id, titulo, cuadrante } = body;\n  \n  // UUIDv4 validation regex\n  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;\n  \n  if (!id) {\n    validatedItems.push({\n      json: {\n        isValid: false,\n        error: \"Field 'id' is required.\"\n      }\n    });\n    continue;\n  }\n  \n  if (!uuidRegex.test(id)) {\n    validatedItems.push({\n      json: {\n        isValid: false,\n        error: \"Field 'id' must be a valid UUIDv4.\"\n      }\n    });\n    continue;\n  }\n  \n  if (!titulo || typeof titulo !== 'string' || titulo.trim() === '') {\n    validatedItems.push({\n      json: {\n        isValid: false,\n        error: \"Field 'titulo' must be a non-empty string.\"\n      }\n    });\n    continue;\n  }\n  \n  if (!cuadrante) {\n    validatedItems.push({\n      json: {\n        isValid: false,\n        error: \"Field 'cuadrante' is required.\"\n      }\n    });\n    continue;\n  }\n  \n  if (!['Q1', 'Q2', 'Q3', 'Q4'].includes(cuadrante)) {\n    validatedItems.push({\n      json: {\n        isValid: false,\n        error: \"Field 'cuadrante' must be one of: Q1, Q2, Q3, Q4.\"\n      }\n    });\n    continue;\n  }\n  \n  validatedItems.push({\n    json: {\n      isValid: true,\n      id: id,\n      titulo: titulo.trim(),\n      cuadrante: cuadrante\n    }\n  });\n}\n\nreturn validatedItems;"
+      },
+      "id": "7cc56fd6-325b-4396-83f8-fdd984374d0f",
+      "name": "Validate Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1952,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e93f9c6c-e5e5-4f4c-813c-0e7d5df2f0fa",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9dfe088c-3ef1-4716-b7cc-00254f45c5ee",
+      "name": "Check Validation",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1760,
+        544
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"error\",\n  \"message\": \"Validation failed.\",\n  \"error\": \"={{ $json.error }}\"\n}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "id": "21f6b1d3-5d62-484b-98a8-cbeca7e23a44",
+      "name": "Respond 400 Bad Request",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1520,
+        656
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"status\": \"accepted\",\n  \"id\": \"={{ $json.id }}\",\n  \"message\": \"Task received and validated. Routing execution.\"\n}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "c0b5a98a-5d8a-46ac-965f-0ba59b98a7ec",
+      "name": "Respond 202 Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1520,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4c617ee2-a5b1-45fb-91d2-4a2ee00a550c",
+                    "leftValue": "={{ $json.cuadrante }}",
+                    "rightValue": "=Q1",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "373010e6-53dc-4761-86fe-435839fc3e62",
+                    "leftValue": "={{ $json.cuadrante }}",
+                    "rightValue": "Q2",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6d521382-34b0-45fd-8522-40889795e208",
+                    "leftValue": "={{ $json.cuadrante }}",
+                    "rightValue": "Q3",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "78be87dd-9bef-46ec-91dc-1aa024e57e19",
+                    "leftValue": "={{ $json.cuadrante }}",
+                    "rightValue": "Q4",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7121216e-9cff-4fb5-a437-2d60b6a6e76f",
+      "name": "Route by Quadrant",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -1264,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=🚨 **Nueva Tarea Eisenhower - Alta Prioridad (Q1: Hacer)**\n**ID**: {{ $json.id }}\n**Tarea**: {{ $json.titulo }}\n**Cuadrante**: {{ $json.cuadrante }} (Urgente e Importante)",
+        "options": {}
+      },
+      "id": "7e2ac274-af4f-47c4-abd6-d7d3e0a2e09e",
+      "name": "Discord Notification (Q1)",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        -1024,
+        64
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "webhookId": "7976cc30-c7bd-4e52-aefd-0eee8469d9a8",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "B87V2zBF07oSTtNG",
+          "name": "Discord Webhook account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_CALENDAR_ID }}",
+          "mode": "list",
+          "cachedResultName": "n8n-projects"
+        },
+        "start": "={{ $now.toISO() }}",
+        "end": "={{ $now.plus({ hours: 1 }).toISO() }}",
+        "additionalFields": {
+          "description": "=Matriz de Eisenhower - ID de Tarea: {{ $json.id }}. Planificado para Q2 (Importante, No Urgente).",
+          "summary": "=Planificar: {{ $json.titulo }}"
+        }
+      },
+      "id": "ea387762-bc44-4dff-b3e1-3d2fc2c7c3da",
+      "name": "Google Calendar Event (Q2)",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        -1024,
+        272
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "QtQOnbwUjjBt2cFb",
+          "name": "Google Calendar account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=Redacta un correo formal de delegación de la siguiente tarea: \"{{ $json.titulo }}\". El correo debe ser profesional, conciso y solicitar al receptor que se haga cargo de la misma debido a que es urgente pero no requiere mi atención directa. Devuelve únicamente el cuerpo del correo sin saludos genéricos de plantilla ni firmas vacías."
+            }
+          ]
+        }
+      },
+      "id": "1cd5a677-15a2-4e5c-a125-e480df032ecf",
+      "name": "Basic LLM Chain (Q3)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        320,
+        144
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxOutputTokens": 1048
+        }
+      },
+      "id": "7232e7c8-c041-4a60-b137-8abb91181380",
+      "name": "Google Gemini Chat Model (Q3)",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        320,
+        304
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "HM653uC6BTuCGchA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $env.GMAIL_RECIPIENT }}",
+        "subject": "=Delegación de Tarea: {{ $('Route by Quadrant').item.json.titulo }}",
+        "message": "={{ $json.content.parts[0].text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "5712c566-d058-4834-b83c-d35b3ea20100",
+      "name": "Gmail (Q3)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        544
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "webhookId": "f5d99113-bbe4-4a52-87f4-9a8be328a2e8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QTLgIKownuFu0J7w",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.GOOGLE_SHEETS_DOC_ID }}",
+          "mode": "list",
+          "cachedResultName": "n8n-eisenhower-eliminar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vivdWgv0qZGUNgZxjrfvYk8hItbyPz40EgOlaT4XV70/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 791947016,
+          "mode": "list",
+          "cachedResultName": "Eliminar",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vivdWgv0qZGUNgZxjrfvYk8hItbyPz40EgOlaT4XV70/edit#gid=791947016"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.id }}",
+            "Tarea": "={{ $json.titulo }}",
+            "Fecha": "={{ $now.format('DD') }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tarea",
+              "displayName": "Tarea",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Fecha",
+              "displayName": "Fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Columna 1",
+              "displayName": "Columna 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "55c237b1-04cc-4c5c-852b-aac8232bc209",
+      "name": "Google Sheets Audit Log (Q4)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1024,
+        832
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pQ7xqhXvK8A7d074",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Redacta un correo formal de delegación de la siguiente tarea: \"{{ $json.titulo }}\". El correo debe ser profesional, conciso y solicitar al receptor que se haga cargo de la misma debido a que es urgente pero no requiere mi atención directa. Devuelve únicamente el cuerpo del correo sin saludos genéricos de plantilla ni firmas vacías."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -800,
+        544
+      ],
+      "id": "feed8178-e9f7-4b01-965c-9268cdc23381",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "HM653uC6BTuCGchA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Redacta un correo formal de delegación de la siguiente tarea: \"{{ $json.titulo }}\". El correo debe ser profesional, conciso y solicitar al receptor que se haga cargo de la misma debido a que es urgente pero no requiere mi atención directa. Devuelve únicamente el cuerpo del correo sin saludos genéricos de plantilla ni firmas vacías.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        816,
+        112
+      ],
+      "id": "e87e9b05-eac1-423c-a34a-db78f49c30cf",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxOutputTokens": 1048
+        }
+      },
+      "id": "0a7fea07-d7c6-47e6-8fd5-6c1850c461d2",
+      "name": "Google Gemini Chat Model (Q3)1",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        816,
+        320
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "HM653uC6BTuCGchA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Redacta un correo formal de delegación de la siguiente tarea: \"{{ $json.titulo }}\". El correo debe ser profesional, conciso y solicitar al receptor que se haga cargo de la misma debido a que es urgente pero no requiere mi atención directa. Devuelve únicamente el cuerpo del correo sin saludos genéricos de plantilla ni firmas vacías."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        112
+      ],
+      "id": "a0299c9a-945d-4173-9710-2e195aab8d93",
+      "name": "Message a model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "HM653uC6BTuCGchA",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## No Usar \n**Detalle:**  El prompt da problemas y no arroja la salida esperada.",
+        "height": 464,
+        "width": 432,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        256,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "c581c23a-aaad-497f-aad7-84ab25c9332d",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Usar\n**Detalle:** Ambos Funcionan igual y la salida es la esperada.",
+        "height": 464,
+        "width": 800,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        704,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "2ee76e53-a91a-4e13-8f5e-92e88c94ddec",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "source": "googleSheets",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.EVALUATION_SPREADSHEET_ID || $env.GOOGLE_SHEETS_DOC_ID }}",
+          "mode": "list",
+          "cachedResultName": "EisenFlow - Evaluation Dataset",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nuXZLo6IJgBCSfCoCTsP6IwmqqxgTQ9Vg6iLWOFBmAY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Q3 - Gemini Tests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nuXZLo6IJgBCSfCoCTsP6IwmqqxgTQ9Vg6iLWOFBmAY/edit#gid=0"
+        },
+        "outputs": {
+          "values": [
+            {
+              "outputName": "generated_email",
+              "outputValue": "={{ $('Message a model').item.json.content.parts[0].text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.evaluation",
+      "typeVersion": 4.8,
+      "position": [
+        -272,
+        544
+      ],
+      "id": "a902686d-0b73-422e-80e5-c7d913cf7727",
+      "name": "Evaluation1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pQ7xqhXvK8A7d074",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "source": "googleSheets",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $env.EVALUATION_SPREADSHEET_ID || $env.GOOGLE_SHEETS_DOC_ID }}",
+          "mode": "list",
+          "cachedResultName": "EisenFlow - Evaluation Dataset",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nuXZLo6IJgBCSfCoCTsP6IwmqqxgTQ9Vg6iLWOFBmAY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Q3 - Gemini Tests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nuXZLo6IJgBCSfCoCTsP6IwmqqxgTQ9Vg6iLWOFBmAY/edit#gid=0"
+        }
+      },
+      "type": "n8n-nodes-base.evaluationTrigger",
+      "typeVersion": 4.7,
+      "position": [
+        -1024,
+        608
+      ],
+      "id": "e683bc50-b758-4479-bfb7-da1c850f0f52",
+      "name": "When fetching a dataset row",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "pQ7xqhXvK8A7d074",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "AI Agent": [
+      {
+        "json": {
+          "output": "Te escribo para delegar la siguiente tarea urgente: actualizar el dashboard de métricas de marketing con los datos de esta semana.\n\nEsta acción es de carácter urgente y, si bien no requiere mi atención directa, su pronta ejecución es fundamental. Agradecería enormemente que pudieras hacerte cargo a la mayor brevedad posible.\n\nPor favor, confírmame una vez completada la actualización."
+        }
+      }
+    ],
+    "Message a model1": [
+      {
+        "json": {
+          "content": {
+            "parts": [
+              {
+                "text": "Te escribo para delegar una tarea urgente: la actualización del dashboard de métricas de marketing con los datos de esta semana.\n\nAunque es prioritaria, no requiere mi atención directa en este momento y necesito enfocarme en otros asuntos.\n\nPor favor, te pido que te encargues de ella a la brevedad posible. Agradecería que me confirmaras tu disponibilidad para asumirla.\n\nGracias por tu colaboración."
+              }
+            ],
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "index": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook Ingestion": {
+      "main": [
+        [
+          {
+            "node": "Validate Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Payload": {
+      "main": [
+        [
+          {
+            "node": "Check Validation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Validation": {
+      "main": [
+        [
+          {
+            "node": "Respond 202 Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond 400 Bad Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond 202 Accepted": {
+      "main": [
+        [
+          {
+            "node": "Route by Quadrant",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Quadrant": {
+      "main": [
+        [
+          {
+            "node": "Discord Notification (Q1)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Calendar Event (Q2)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Google Sheets Audit Log (Q4)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model (Q3)": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain (Q3)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Gmail (Q3)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model (Q3)1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail (Q3)": {
+      "main": [
+        [
+          {
+            "node": "Evaluation1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When fetching a dataset row": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "timeSavedPerExecution": 1,
+    "errorWorkflow": "CBx1BNxVnCrrDX6b"
+  },
+  "versionId": "e463a8a4-893d-42e9-9ca0-09a08a69eb75",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3165ac719d3c3908b4669eb4ef812aa1f0c914d80285addd5f608792cc934d9c"
+  },
+  "nodeGroups": [],
+  "id": "EqkYNP7PGDb2Mu7v",
+  "tags": [
+    {
+      "updatedAt": "2026-06-16T15:06:35.603Z",
+      "createdAt": "2026-06-16T15:06:35.603Z",
+      "id": "ESp4Hypu4Id8EQzk",
+      "name": "productividad"
+    }
+  ]
+}

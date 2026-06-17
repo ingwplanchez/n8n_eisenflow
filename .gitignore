@@ -1,0 +1,12 @@
+# Environment variables
+.env
+
+# n8n local data or backups (optional)
+*backup*.json
+_eisenhower_matrix_orchestrator_v2_.json
+
+# IDE and OS files
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

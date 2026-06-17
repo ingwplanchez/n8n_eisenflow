@@ -1,0 +1,74 @@
+{
+  "name": "EisenFlow - Error Handler",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -272,
+        0
+      ],
+      "id": "cbe25547-4a39-44e4-88a5-03414a4ce5ae",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "authentication": "webhook",
+        "content": "=⚠️ Error en EisenFlow\nWorkflow: {{ $json.workflow.name }}\nNodo: {{ $json.execution.lastNodeExecuted }}\nError: {{ $json.execution.error.message }}\n\n",
+        "options": {}
+      },
+      "id": "b927d3a0-830e-4e7b-9599-e0c1c3a9202d",
+      "name": "Discord Notification (Q1)",
+      "type": "n8n-nodes-base.discord",
+      "typeVersion": 2,
+      "position": [
+        32,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "webhookId": "7976cc30-c7bd-4e52-aefd-0eee8469d9a8",
+      "credentials": {
+        "discordWebhookApi": {
+          "id": "bwOYI5bTOTysDFH2",
+          "name": "Discord Webhook account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Discord Notification (Q1)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Discord Notification (Q1)": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a973e486-4386-40ce-ac50-3c787e591b15",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bcc3e773823d1516abb664a42599fcf2c5f71a7474505aca84a5c0cb771da4a1"
+  },
+  "id": "-d4wlErCiPWabH9eYkIZa",
+  "tags": []
+}
