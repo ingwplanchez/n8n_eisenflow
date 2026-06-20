@@ -1,0 +1,4 @@
+id,titulo,cuadrante,expected_keywords,generated_email
+test-001,Revisar informe financiero urgente,Q3,"delegar,urgente,cargo",
+test-002,Actualizar dashboard de métricas,Q3,"encargue,brevedad,confirmar",
+test-003,Responder correo del cliente VIP,Q3,"profesional,conciso,atención",

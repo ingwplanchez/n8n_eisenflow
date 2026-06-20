@@ -123,7 +123,7 @@ docker run -d --name n8n -p 5678:5678 -v n8n_data:/home/node/.n8n docker.n8n.io/
 
 ## 🧪 Cómo probar el Workflow
 
-### Envío de Tarea mediante Webhook
+### Envío de Tarea mediante Webhook (cURL)
 Puedes enviar una petición `POST` al Webhook de pruebas en la ruta `/webhook-test/eisenhower/tasks` utilizando `curl`:
 
 ```bash
@@ -136,10 +136,30 @@ curl -X POST http://localhost:5678/webhook-test/eisenhower/tasks \
   }'
 ```
 
+### Envío de Tarea mediante Postman
+Para realizar pruebas utilizando el panel gráfico de Postman:
+1. Crea una nueva petición de tipo **`POST`** en Postman.
+2. Configura la dirección URL de destino:
+   - En modo de pruebas: `http://localhost:5678/webhook-test/eisenhower/tasks`
+   - En modo de producción: `http://localhost:5678/webhook/eisenhower/tasks`
+3. Ve a la pestaña **Headers** e ingresa la cabecera: `Content-Type: application/json`.
+4. Ve a la pestaña **Body**, selecciona **raw** y escoge el formato **JSON**. Pega el siguiente cuerpo de prueba:
+   ```json
+   {
+     "id": "7a35e890-482a-4df3-b82c-dc8c34f3c054",
+     "titulo": "Actualizar el dashboard de ventas semanales",
+     "cuadrante": "Q3"
+   }
+   ```
+5. Haz clic en **Send**. Obtendrás una respuesta `202 Accepted` de validación exitosa.
+
 ### Ejecutar Suite de Evaluaciones (Pruebas Unitarias de IA)
-1. Conecta el disparador de evaluación al dataset de Google Sheets `EisenFlow - Evaluation Dataset` (hoja `Q3 - Gemini Tests`).
-2. Dirígete a la pestaña **Evaluations** en el editor de n8n.
-3. Haz clic en **Run** para ejecutar las pruebas automatizadas. Esto validará la respuesta generada por Gemini y la escribirá automáticamente en tu Google Sheet en la columna `generated_email`.
+Para evaluar de forma masiva y automatizada la redacción de correos con Gemini:
+1. Se ha incluido el dataset con los casos de prueba en la ruta [tests/eisenflow_evaluation_dataset.csv](tests/eisenflow_evaluation_dataset.csv).
+2. Crea un archivo en Google Sheets llamado `EisenFlow - Evaluation Dataset` con una hoja/pestaña llamada `Q3 - Gemini Tests` e importa este archivo CSV.
+3. Conecta el trigger de evaluaciones `When fetching a dataset row` de tu n8n a tu Google Sheet.
+4. En el lienzo de n8n, haz clic en la pestaña **Evaluations** (arriba a la derecha).
+5. Pulsa **Run** para que n8n ejecute de forma aislada cada fila de prueba del CSV, evalúe la salida redactada por Gemini 2.5 Flash y la escriba directamente en tu Google Sheet bajo la columna `generated_email`.
 
 ---
 
