@@ -346,15 +346,13 @@
           "__rl": true,
           "value": "={{ $env.GOOGLE_SHEETS_DOC_ID }}",
           "mode": "list",
-          "cachedResultName": "n8n-eisenhower-eliminar",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vivdWgv0qZGUNgZxjrfvYk8hItbyPz40EgOlaT4XV70/edit?usp=drivesdk"
+          "cachedResultName": "n8n-eisenhower-eliminar"
         },
         "sheetName": {
           "__rl": true,
           "value": 791947016,
           "mode": "list",
-          "cachedResultName": "Eliminar",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1vivdWgv0qZGUNgZxjrfvYk8hItbyPz40EgOlaT4XV70/edit#gid=791947016"
+          "cachedResultName": "Eliminar"
         },
         "columns": {
           "mappingMode": "defineBelow",
@@ -573,15 +571,13 @@
           "__rl": true,
           "value": "={{ $env.EVALUATION_SPREADSHEET_ID || $env.GOOGLE_SHEETS_DOC_ID }}",
           "mode": "list",
-          "cachedResultName": "EisenFlow - Evaluation Dataset",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nuXZLo6IJgBCSfCoCTsP6IwmqqxgTQ9Vg6iLWOFBmAY/edit?usp=drivesdk"
+          "cachedResultName": "EisenFlow - Evaluation Dataset"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "Q3 - Gemini Tests",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nuXZLo6IJgBCSfCoCTsP6IwmqqxgTQ9Vg6iLWOFBmAY/edit#gid=0"
+          "cachedResultName": "Q3 - Gemini Tests"
         },
         "outputs": {
           "values": [
@@ -614,15 +610,13 @@
           "__rl": true,
           "value": "={{ $env.EVALUATION_SPREADSHEET_ID || $env.GOOGLE_SHEETS_DOC_ID }}",
           "mode": "list",
-          "cachedResultName": "EisenFlow - Evaluation Dataset",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nuXZLo6IJgBCSfCoCTsP6IwmqqxgTQ9Vg6iLWOFBmAY/edit?usp=drivesdk"
+          "cachedResultName": "EisenFlow - Evaluation Dataset"
         },
         "sheetName": {
           "__rl": true,
           "value": "gid=0",
           "mode": "list",
-          "cachedResultName": "Q3 - Gemini Tests",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1nuXZLo6IJgBCSfCoCTsP6IwmqqxgTQ9Vg6iLWOFBmAY/edit#gid=0"
+          "cachedResultName": "Q3 - Gemini Tests"
         }
       },
       "type": "n8n-nodes-base.evaluationTrigger",
@@ -818,8 +812,7 @@
   },
   "versionId": "e463a8a4-893d-42e9-9ca0-09a08a69eb75",
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "3165ac719d3c3908b4669eb4ef812aa1f0c914d80285addd5f608792cc934d9c"
+    "templateCredsSetupCompleted": true
   },
   "nodeGroups": [],
   "id": "EqkYNP7PGDb2Mu7v",
