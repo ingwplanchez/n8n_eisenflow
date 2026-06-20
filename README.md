@@ -71,6 +71,18 @@ n8n_eisenflow/
 
 ---
 
+## 📸 Capturas de Pantalla
+
+### 1. Flujo de Trabajo Principal
+Vista general de la orquestación y enrutamiento inteligente de tareas en n8n:
+![EisenFlow Main Workflow](screenshots/n8n-eisenflow-view.jpg)
+
+### 2. Manejador Global de Errores
+El flujo de captura automatizada de excepciones y notificaciones instantáneas a Discord:
+![EisenFlow Error Handler](screenshots/n8n-eisenflow-error-handler.jpg)
+
+---
+
 ## 🚨 Manejador de Errores (Error Handler)
 
 El proyecto incluye el archivo [eisenflow_error_handler.json](workflows/eisenflow_error_handler.json). Este flujo actúa como un capturador centralizado de errores.
